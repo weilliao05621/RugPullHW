@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "solmate/tokens/ERC20.sol";
 import { TradingCenter, IERC20 } from "../src/TradingCenter.sol";
 import { TradingCenterV2 } from "../src/TradingCenterV2.sol";
@@ -72,12 +73,20 @@ contract TradingCenterTest is Test {
 
   function testUpgrade() public {
     // TODO:
+    address v2 = address(new TradingCenterV2());
     // Let's pretend that you are proxy owner
     // Try to upgrade the proxy to TradingCenterV2
+    vm.prank(owner);
+    proxy.upgradeTo(v2);
+
+    /*
+      合約變數在生成時，會自動被 compile 出 view function 可以調用；也因此可以直接讀到變數的 view function，藉此在 proxy 上讀取沒有寫變數但保有 storage 的值
+    */
     // And check if all state are correct (initialized, usdt address, usdc address)
     assertEq(proxyTradingCenter.initialized(), true);
     assertEq(address(proxyTradingCenter.usdc()), address(usdc));
     assertEq(address(proxyTradingCenter.usdt()), address(usdt));
+    
   }
 
   function testRugPull() public {
@@ -85,9 +94,18 @@ contract TradingCenterTest is Test {
     // TODO: 
     // Let's pretend that you are proxy owner
     // Try to upgrade the proxy to TradingCenterV2
+    address v2 = address(new TradingCenterV2());
+    vm.prank(owner);
+    proxy.upgradeTo(v2);
+    proxyTradingCenter = TradingCenterV2(address(proxy));
+
     // And empty users' usdc and usdt
+    (bool success1,) = address(proxy).call(abi.encodeWithSignature("rugPull(address,uint256)", user1,userInitialBalance));
+    (bool success2,) = address(proxy).call(abi.encodeWithSignature("rugPull(address,uint256)", user2,userInitialBalance));
 
     // Assert users's balances are 0
+    assertTrue(success1);
+    assertTrue(success2);
     assertEq(usdt.balanceOf(user1), 0);
     assertEq(usdc.balanceOf(user1), 0);
     assertEq(usdt.balanceOf(user2), 0);
