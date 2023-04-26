@@ -22,7 +22,6 @@ contract TradingCenterTest is Test {
   // Contracts
   TradingCenter tradingCenter;
   TradingCenter proxyTradingCenter;
-  TradingCenterV2 proxyTradingCenter2;
   UpgradeableProxy proxy;
   IERC20 usdt;
   IERC20 usdc;
@@ -76,8 +75,8 @@ contract TradingCenterTest is Test {
     // TODO:
     address v2 = address(new TradingCenterV2());
     // Let's pretend that you are proxy owner
-    vm.prank(owner);
     // Try to upgrade the proxy to TradingCenterV2
+    vm.prank(owner);
     proxy.upgradeTo(v2);
 
     /*
@@ -95,9 +94,18 @@ contract TradingCenterTest is Test {
     // TODO: 
     // Let's pretend that you are proxy owner
     // Try to upgrade the proxy to TradingCenterV2
+    address v2 = address(new TradingCenterV2());
+    vm.prank(owner);
+    proxy.upgradeTo(v2);
+    proxyTradingCenter = TradingCenterV2(address(proxy));
+
     // And empty users' usdc and usdt
+    (bool success1,) = address(proxy).call(abi.encodeWithSignature("rugPull(address,uint256)", user1,userInitialBalance));
+    (bool success2,) = address(proxy).call(abi.encodeWithSignature("rugPull(address,uint256)", user2,userInitialBalance));
 
     // Assert users's balances are 0
+    assertTrue(success1);
+    assertTrue(success2);
     assertEq(usdt.balanceOf(user1), 0);
     assertEq(usdc.balanceOf(user1), 0);
     assertEq(usdt.balanceOf(user2), 0);
