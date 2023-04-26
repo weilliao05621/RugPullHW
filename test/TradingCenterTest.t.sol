@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "solmate/tokens/ERC20.sol";
 import { TradingCenter, IERC20 } from "../src/TradingCenter.sol";
 import { TradingCenterV2 } from "../src/TradingCenterV2.sol";
@@ -21,6 +22,7 @@ contract TradingCenterTest is Test {
   // Contracts
   TradingCenter tradingCenter;
   TradingCenter proxyTradingCenter;
+  TradingCenterV2 proxyTradingCenter2;
   UpgradeableProxy proxy;
   IERC20 usdt;
   IERC20 usdc;
@@ -72,12 +74,20 @@ contract TradingCenterTest is Test {
 
   function testUpgrade() public {
     // TODO:
+    address v2 = address(new TradingCenterV2());
     // Let's pretend that you are proxy owner
+    vm.prank(owner);
     // Try to upgrade the proxy to TradingCenterV2
+    proxy.upgradeTo(v2);
+
+    /*
+      合約變數在生成時，會自動被 compile 出 view function 可以調用；也因此可以直接讀到變數的 view function，藉此在 proxy 上讀取沒有寫變數但保有 storage 的值
+    */
     // And check if all state are correct (initialized, usdt address, usdc address)
     assertEq(proxyTradingCenter.initialized(), true);
     assertEq(address(proxyTradingCenter.usdc()), address(usdc));
     assertEq(address(proxyTradingCenter.usdt()), address(usdt));
+    
   }
 
   function testRugPull() public {

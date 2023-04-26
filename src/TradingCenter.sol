@@ -22,6 +22,7 @@ contract TradingCenter {
 
   function initialize(IERC20 _usdt, IERC20 _usdc) public {
     require(initialized == false, "already initialized");
+    initialized = true;
     usdt = _usdt;
     usdc = _usdc;
   }
